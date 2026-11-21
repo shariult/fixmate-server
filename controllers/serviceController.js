@@ -3,7 +3,24 @@ import slugify from "slugify";
 import db from "../models/index.js";
 
 async function index(req, res) {
-  const resData = await db.services.find().toArray();
+  const resData = await db.services
+    .aggregate([
+      {
+        $lookup: {
+          from: "user",
+          localField: "userId",
+          foreignField: "_id",
+          as: "userDetails",
+        },
+      },
+      {
+        $unwind: {
+          path: "$userDetails",
+          preserveNullAndEmptyArrays: true,
+        },
+      },
+    ])
+    .toArray();
   res.json(resData);
 }
 
@@ -13,7 +30,7 @@ async function store(req, res) {
   const service = {
     ...reqBody,
     slug: slugify(req.body.title),
-    userId: new ObjectId(userData._id),
+    userId: new ObjectId(userData.id),
     status: "approved",
     approved: "pending",
     createdAt: new Date(),
