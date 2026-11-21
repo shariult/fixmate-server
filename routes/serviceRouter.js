@@ -10,6 +10,8 @@ router
   .get(AsyncError(serviceController.index))
   .post(verifyToken, AsyncError(serviceController.store));
 
+router.route("/:sId").get(AsyncError(serviceController.show));
+
 router.route("/seed").get(AsyncError(serviceController.seed));
 
 export default router;

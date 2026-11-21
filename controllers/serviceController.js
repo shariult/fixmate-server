@@ -107,6 +107,30 @@ async function store(req, res) {
   res.json(resData);
 }
 
+async function show(req, res) {
+  const sId = req.params.sId;
+  const resData = await db.services
+    .aggregate([
+      { $match: { _id: new ObjectId(sId) } },
+      {
+        $lookup: {
+          from: "user",
+          localField: "userId",
+          foreignField: "_id",
+          as: "userDetails",
+        },
+      },
+      {
+        $unwind: {
+          path: "$userDetails",
+          preserveNullAndEmptyArrays: true,
+        },
+      },
+    ])
+    .toArray();
+  res.json(resData[0]);
+}
+
 async function seed(req, res) {
   const dropServices = await db.services.drop();
 
@@ -123,4 +147,4 @@ async function seed(req, res) {
   res.json(resData);
 }
 
-export default { index, store, seed };
+export default { index, store, show, seed };
