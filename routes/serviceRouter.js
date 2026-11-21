@@ -5,6 +5,9 @@ import { verifyToken } from "../middlewares/authValidate.js";
 
 import { AsyncError } from "../utils/errorHandler.js";
 
-router.route("/").post(verifyToken, AsyncError(serviceController.store));
+router
+  .route("/")
+  .get(AsyncError(serviceController.index))
+  .post(verifyToken, AsyncError(serviceController.store));
 
 export default router;

@@ -2,6 +2,11 @@ import { ObjectId } from "mongodb";
 import slugify from "slugify";
 import db from "../models/index.js";
 
+async function index(req, res) {
+  const resData = await db.services.find().toArray();
+  res.json(resData);
+}
+
 async function store(req, res) {
   const reqBody = req.body;
   const userData = req.user;
@@ -18,4 +23,4 @@ async function store(req, res) {
   res.json(resData);
 }
 
-export default { store };
+export default { index, store };
