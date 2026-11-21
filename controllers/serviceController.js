@@ -1,6 +1,7 @@
 import { ObjectId } from "mongodb";
 import slugify from "slugify";
 import db from "../models/index.js";
+import { servicesDemo } from "../seeds/services.js";
 
 async function index(req, res) {
   const resData = await db.services
@@ -32,7 +33,7 @@ async function store(req, res) {
     slug: slugify(req.body.title),
     userId: new ObjectId(userData.id),
     status: "approved",
-    approved: "pending",
+    approval: "pending",
     createdAt: new Date(),
     updatedAt: new Date(),
   };
@@ -40,4 +41,20 @@ async function store(req, res) {
   res.json(resData);
 }
 
-export default { index, store };
+async function seed(req, res) {
+  const dropServices = await db.services.drop();
+
+  const technicians = await db.user.find({ role: "technician" }).toArray();
+  const services = servicesDemo.map((item) => {
+    const user = technicians[Math.floor(Math.random() * technicians.length)];
+    return {
+      ...item,
+      userId: new ObjectId(user._id),
+    };
+  });
+
+  const resData = await db.services.insertMany(services);
+  res.json(resData);
+}
+
+export default { index, store, seed };
