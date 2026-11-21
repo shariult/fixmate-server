@@ -16,6 +16,10 @@ router
   .put(verifyToken, AsyncError(serviceController.update))
   .delete(verifyToken, AsyncError(serviceController.destroy));
 
+router
+  .route("/:sId/status")
+  .put(verifyToken, AsyncError(serviceController.status));
+
 router.route("/seed").get(AsyncError(serviceController.seed));
 
 export default router;

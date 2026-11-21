@@ -148,6 +148,15 @@ async function destroy(req, res) {
   res.json(resData);
 }
 
+async function status(req, res) {
+  const sId = req.params.sId;
+  const resData = await db.services.updateOne(
+    { _id: new ObjectId(sId) },
+    { $set: { status: req.body.status } },
+  );
+  res.json(resData);
+}
+
 async function seed(req, res) {
   const dropServices = await db.services.drop();
 
@@ -164,4 +173,4 @@ async function seed(req, res) {
   res.json(resData);
 }
 
-export default { index, store, show, update, destroy, seed };
+export default { index, store, show, update, destroy, status, seed };
