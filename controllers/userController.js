@@ -4,9 +4,15 @@ import db from "../models/index.js";
 async function updateNewUser(req, res) {
   const userData = req.user;
   const userId = userData.id;
+  const reqBody = { approval: "pending", status: "approved" };
+
+  if (userData.role === "customer") {
+    reqBody.approval = "approved";
+  }
+
   const resData = await db.user.updateOne(
     { _id: new ObjectId(userId) },
-    { $set: { approval: "pending", status: "approved" } },
+    { $set: reqBody },
   );
   res.json(resData);
 }
