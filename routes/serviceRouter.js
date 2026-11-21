@@ -10,7 +10,11 @@ router
   .get(AsyncError(serviceController.index))
   .post(verifyToken, AsyncError(serviceController.store));
 
-router.route("/:sId").get(AsyncError(serviceController.show));
+router
+  .route("/:sId")
+  .get(AsyncError(serviceController.show))
+  .put(verifyToken, AsyncError(serviceController.update))
+  .delete(verifyToken, AsyncError(serviceController.destroy));
 
 router.route("/seed").get(AsyncError(serviceController.seed));
 

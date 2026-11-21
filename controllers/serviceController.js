@@ -131,6 +131,23 @@ async function show(req, res) {
   res.json(resData[0]);
 }
 
+async function update(req, res) {
+  const sId = req.params.sId;
+  const reqBody = req.body;
+  reqBody.approval = "pending";
+  const resData = await db.services.updateOne(
+    { _id: new ObjectId(sId) },
+    { $set: reqBody },
+  );
+  res.json(resData);
+}
+
+async function destroy(req, res) {
+  const sId = req.params.sId;
+  const resData = await db.services.deleteOne({ _id: new ObjectId(sId) });
+  res.json(resData);
+}
+
 async function seed(req, res) {
   const dropServices = await db.services.drop();
 
@@ -147,4 +164,4 @@ async function seed(req, res) {
   res.json(resData);
 }
 
-export default { index, store, show, seed };
+export default { index, store, show, update, destroy, seed };
