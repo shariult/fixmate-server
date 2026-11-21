@@ -16,7 +16,8 @@
     "express-mongo-sanitize": "^2.2.0",
     "joi": "^18.3.2",
     "jose": "^6.2.17",
-    "mongodb": "^7.9.0"
+    "mongodb": "^7.9.0",
+    "slugify": "^1.6.9"
   },
   "devDependencies": {
     "@faker-js/faker": "^10.6.0",

@@ -18,5 +18,8 @@ async function connectToMongoDB() {
 const mongoClient = await connectToMongoDB();
 const db = mongoClient.db();
 const user = db.collection("user");
+const services = db.collection("services");
+const bookings = db.collection("bookings");
+const payments = db.collection("payments");
 
-export default { user };
+export default { user, services, bookings, payments };

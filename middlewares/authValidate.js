@@ -1,14 +1,14 @@
 import { createRemoteJWKSet, jwtVerify } from "jose";
 
-async function isLoggedIn(req, res, next) {
+async function verifyToken(req, res, next) {
   const authHeader = req.headers.authorization;
   if (!authHeader) {
-    return res.status(401).json({ msg: "Please sign in first!" });
+    return res.status(401).json({ message: "Please sign in first!" });
   }
 
   const token = authHeader.split(" ")[1];
   if (!token) {
-    return res.status(401).json({ msg: "Please sign in first!" });
+    return res.status(401).json({ message: "Please sign in first!" });
   }
 
   const JWKS = createRemoteJWKSet(
@@ -20,8 +20,8 @@ async function isLoggedIn(req, res, next) {
     req.user = payload;
     next();
   } catch (error) {
-    return res.status(500).json({ msg: "Authentication went wrong!" });
+    return res.status(500).json({ message: "Authentication went wrong!" });
   }
 }
 
-export { isLoggedIn };
+export { verifyToken };

@@ -2,7 +2,7 @@ import dotEnv from "dotenv";
 if (process.env.NODE_ENV === "dev") {
   dotEnv.config();
 }
-const PORT = process.env.PORT || 8080;
+const PORT = process.env.PORT || 5000;
 
 //=== imports ===//
 import express from "express";
@@ -17,10 +17,12 @@ app.use(cors());
 //=== custom imports ===//
 import { ExpressError } from "./utils/errorHandler.js";
 import indexRoutes from "./routes/indexRouter.js";
+import serviceRoutes from "./routes/serviceRouter.js";
 
 //=== routes ===//
 
 app.use("/", indexRoutes);
+app.use("/service", serviceRoutes);
 
 //=== error handler ===//
 
