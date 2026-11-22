@@ -24,6 +24,69 @@ async function store(req, res) {
   res.json(resData);
 }
 
+async function show(req, res) {
+  const bId = req.params.bId;
+  const resData = await db.bookings
+    .aggregate([
+      { $match: { _id: new ObjectId(bId) } },
+      {
+        $lookup: {
+          from: "services",
+          localField: "serviceId",
+          foreignField: "_id",
+          as: "serviceDetails",
+        },
+      },
+      {
+        $unwind: {
+          path: "$serviceDetails",
+          preserveNullAndEmptyArrays: true,
+        },
+      },
+      {
+        $lookup: {
+          from: "user",
+          localField: "technicianId",
+          foreignField: "_id",
+          as: "technicianDetails",
+        },
+      },
+      {
+        $unwind: {
+          path: "$technicianDetails",
+          preserveNullAndEmptyArrays: true,
+        },
+      },
+      {
+        $lookup: {
+          from: "user",
+          localField: "customerId",
+          foreignField: "_id",
+          as: "customerDetails",
+        },
+      },
+      {
+        $unwind: {
+          path: "$customerDetails",
+          preserveNullAndEmptyArrays: true,
+        },
+      },
+    ])
+    .toArray();
+  res.json(resData[0]);
+}
+
+async function update(req, res) {
+  const bId = req.params.bId;
+  const reqBody = req.body;
+
+  const resData = await db.bookings.updateOne(
+    { _id: new ObjectId(bId) },
+    { $set: reqBody },
+  );
+  res.json(resData);
+}
+
 async function cancel(req, res) {
   const bId = req.params.bId;
   const resData = await db.bookings.updateOne(
@@ -43,4 +106,4 @@ async function status(req, res) {
   res.json(resData);
 }
 
-export default { store, cancel, status };
+export default { store, show, update, cancel, status };
