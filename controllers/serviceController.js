@@ -86,8 +86,33 @@ async function index(req, res) {
       },
     ])
     .sort(sortQuery)
-    .skip(0)
-    .limit(12)
+    .toArray();
+  res.json(resData);
+}
+
+async function indexAdmin(req, res) {
+  const searchQuery = {};
+  let sortQuery = { createdAt: -1 };
+
+  const resData = await db.services
+    .aggregate([
+      { $match: searchQuery },
+      {
+        $lookup: {
+          from: "user",
+          localField: "userId",
+          foreignField: "_id",
+          as: "userDetails",
+        },
+      },
+      {
+        $unwind: {
+          path: "$userDetails",
+          preserveNullAndEmptyArrays: true,
+        },
+      },
+    ])
+    .sort(sortQuery)
     .toArray();
   res.json(resData);
 }
@@ -135,7 +160,9 @@ async function show(req, res) {
 async function update(req, res) {
   const sId = req.params.sId;
   const reqBody = req.body;
-  reqBody.approval = "pending";
+  if (req.user.role !== "admin") {
+    reqBody.approval = "pending";
+  }
   const resData = await db.services.updateOne(
     { _id: new ObjectId(sId) },
     { $set: reqBody },
@@ -174,4 +201,13 @@ async function seed(req, res) {
   res.json(resData);
 }
 
-export default { index, store, show, update, destroy, status, seed };
+export default {
+  index,
+  store,
+  show,
+  update,
+  destroy,
+  status,
+  seed,
+  indexAdmin,
+};

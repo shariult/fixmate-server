@@ -13,6 +13,10 @@ router
 router.route("/seed").get(AsyncError(serviceController.seed));
 
 router
+  .route("/admin")
+  .get(verifyToken, AsyncError(serviceController.indexAdmin));
+
+router
   .route("/:sId")
   .get(AsyncError(serviceController.show))
   .put(verifyToken, AsyncError(serviceController.update))

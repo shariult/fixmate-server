@@ -18,14 +18,16 @@ app.use(cors());
 import { ExpressError } from "./utils/errorHandler.js";
 import indexRoutes from "./routes/indexRouter.js";
 import serviceRoutes from "./routes/serviceRouter.js";
-import bookingRoute from "./routes/BookingRouter.js";
+import bookingRoutes from "./routes/BookingRouter.js";
 import userRoutes from "./routes/userRouter.js";
+import paymentRoutes from "./routes/paymentRouter.js";
 
 //=== routes ===//
 
 app.use("/", indexRoutes);
 app.use("/service", serviceRoutes);
-app.use("/booking", bookingRoute);
+app.use("/booking", bookingRoutes);
+app.use("/payment", paymentRoutes);
 app.use("/user", userRoutes);
 
 //=== error handler ===//
