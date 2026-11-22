@@ -1,8 +1,9 @@
 import express from "express";
 const router = express.Router();
-import userController from "../controllers/userController.js";
 import { AsyncError } from "../utils/errorHandler.js";
 import { verifyToken } from "../middlewares/authValidate.js";
+
+import userController from "../controllers/userController.js";
 
 router
   .route("/update-new-user")

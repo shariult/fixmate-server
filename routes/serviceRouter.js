@@ -1,9 +1,9 @@
 import express from "express";
 const router = express.Router();
-import serviceController from "../controllers/serviceController.js";
 import { verifyToken } from "../middlewares/authValidate.js";
-
 import { AsyncError } from "../utils/errorHandler.js";
+
+import serviceController from "../controllers/serviceController.js";
 
 router
   .route("/")
