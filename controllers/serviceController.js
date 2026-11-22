@@ -16,6 +16,7 @@ async function index(req, res) {
   if (typeQuery === "featured") {
     const resData = await db.services
       .aggregate([
+        { $match: { status: "active", approval: "approved" } },
         {
           $lookup: {
             from: "user",
@@ -46,7 +47,7 @@ async function index(req, res) {
     searchQuery.serviceMode = serviceMode;
   }
 
-  const searchQuery = {};
+  const searchQuery = { status: "active", approval: "approved" };
   if (search && search.trim()) {
     searchQuery.title = {
       $regex: search.trim(),
@@ -98,7 +99,7 @@ async function store(req, res) {
     ...reqBody,
     slug: slugify(req.body.title),
     userId: new ObjectId(userData.id),
-    status: "approved",
+    status: "active",
     approval: "pending",
     createdAt: new Date(),
     updatedAt: new Date(),
