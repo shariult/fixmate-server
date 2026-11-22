@@ -31,4 +31,56 @@ async function getMyServices(req, res) {
   res.json(resData);
 }
 
-export default { getHome, getMyServices };
+async function getMyBookings(req, res) {
+  const userData = req.user;
+  const resData = await db.bookings
+    .aggregate([
+      { $match: { customerId: new ObjectId(userData.id) } },
+      {
+        $lookup: {
+          from: "user",
+          localField: "customerId",
+          foreignField: "_id",
+          as: "customerDetails",
+        },
+      },
+      {
+        $unwind: {
+          path: "$customerDetails",
+          preserveNullAndEmptyArrays: true,
+        },
+      },
+      {
+        $lookup: {
+          from: "user",
+          localField: "technicianId",
+          foreignField: "_id",
+          as: "technicianDetails",
+        },
+      },
+      {
+        $unwind: {
+          path: "$technicianDetails",
+          preserveNullAndEmptyArrays: true,
+        },
+      },
+      {
+        $lookup: {
+          from: "services",
+          localField: "serviceId",
+          foreignField: "_id",
+          as: "serviceDetails",
+        },
+      },
+      {
+        $unwind: {
+          path: "$serviceDetails",
+          preserveNullAndEmptyArrays: true,
+        },
+      },
+    ])
+    .toArray();
+  res.json(resData);
+}
+
+export default { getHome, getMyServices, getMyBookings };

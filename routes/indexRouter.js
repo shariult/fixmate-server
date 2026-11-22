@@ -6,8 +6,13 @@ import { verifyToken } from "../middlewares/authValidate.js";
 import indexController from "../controllers/indexController.js";
 
 router.route("/").get(indexController.getHome);
+
 router
   .route("/my-services")
   .get(verifyToken, AsyncError(indexController.getMyServices));
+
+router
+  .route("/my-bookings")
+  .get(verifyToken, AsyncError(indexController.getMyBookings));
 
 export default router;
