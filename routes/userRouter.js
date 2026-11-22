@@ -8,7 +8,7 @@ import userController from "../controllers/userController.js";
 router.route("/").get(verifyToken, AsyncError(userController.index));
 
 router
-  .route("/:uId")
+  .route("/users/profile")
   .put(verifyToken, AsyncError(userController.updateUserRole));
 
 router
