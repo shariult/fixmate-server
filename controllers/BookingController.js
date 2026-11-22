@@ -24,4 +24,13 @@ async function store(req, res) {
   res.json(resData);
 }
 
-export default { store };
+async function cancel(req, res) {
+  const bId = req.params.bId;
+  const resData = await db.bookings.updateOne(
+    { _id: new ObjectId(bId) },
+    { $set: { status: "cancelled" } },
+  );
+  res.json(resData);
+}
+
+export default { store, cancel };
