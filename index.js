@@ -25,10 +25,10 @@ import paymentRoutes from "./routes/paymentRouter.js";
 //=== routes ===//
 
 app.use("/", indexRoutes);
-app.use("/service", serviceRoutes);
-app.use("/booking", bookingRoutes);
-app.use("/payment", paymentRoutes);
-app.use("/user", userRoutes);
+app.use("/api/services", serviceRoutes);
+app.use("/api/bookings", bookingRoutes);
+app.use("/api/payments", paymentRoutes);
+app.use("/api/users", userRoutes);
 
 //=== error handler ===//
 

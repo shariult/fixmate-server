@@ -1,131 +1,76 @@
 import { ObjectId } from "mongodb";
 import slugify from "slugify";
 import db from "../models/index.js";
-import { servicesDemo } from "../seeds/services.js";
+import { userLookup } from "../utils/lookups.js";
 
-async function index(req, res) {
-  const {
-    type: typeQuery,
-    category,
-    servicemode: serviceMode,
-    sort,
-    search,
-  } = req.query;
+async function list(req, res) {
+  const { category, mode, sort, search } = req.query;
 
-  //=== featured ===//
-  if (typeQuery === "featured") {
-    const resData = await db.services
-      .aggregate([
-        { $match: { status: "active", approval: "approved" } },
-        {
-          $lookup: {
-            from: "user",
-            localField: "userId",
-            foreignField: "_id",
-            as: "userDetails",
-          },
-        },
-        {
-          $unwind: {
-            path: "$userDetails",
-            preserveNullAndEmptyArrays: true,
-          },
-        },
-      ])
-      .sort({ createdAt: -1 })
-      .limit(6)
-      .toArray();
-    res.json(resData);
-    return;
-  }
+  const searchQuery = { isAvailable: true, approvalStatus: "approved" };
 
-  //=== general ===//
   if (category) {
     searchQuery.category = category;
   }
-  if (serviceMode) {
-    searchQuery.serviceMode = serviceMode;
+  if (mode) {
+    searchQuery.serviceMode = mode;
   }
 
-  const searchQuery = { status: "active", approval: "approved" };
   if (search && search.trim()) {
-    searchQuery.title = {
-      $regex: search.trim(),
-      $options: "i",
-    };
-    searchQuery.description = {
-      $regex: search.trim(),
-      $options: "i",
-    };
+    const regex = { $regex: escapeRegex(search.trim()), $options: "i" };
+
+    searchQuery.$or = [
+      { title: regex },
+      { description: regex },
+      { category: regex },
+    ];
   }
 
   let sortQuery = { createdAt: -1 };
-  if (sort === "highest-price") {
+  if (sort === "price_desc") {
     sortQuery = { basePrice: -1 };
   }
-  if (sort === "lowest-price") {
+  if (sort === "price_asc") {
     sortQuery = { basePrice: 1 };
   }
 
   const resData = await db.services
-    .aggregate([
-      { $match: searchQuery },
-      {
-        $lookup: {
-          from: "user",
-          localField: "userId",
-          foreignField: "_id",
-          as: "userDetails",
-        },
-      },
-      {
-        $unwind: {
-          path: "$userDetails",
-          preserveNullAndEmptyArrays: true,
-        },
-      },
-    ])
+    .aggregate([{ $match: searchQuery }, ...userLookup()])
     .sort(sortQuery)
     .toArray();
   res.json(resData);
 }
 
-async function indexAdmin(req, res) {
-  const searchQuery = {};
-  let sortQuery = { createdAt: -1 };
-
+async function listFeatured(req, res) {
   const resData = await db.services
     .aggregate([
-      { $match: searchQuery },
-      {
-        $lookup: {
-          from: "user",
-          localField: "userId",
-          foreignField: "_id",
-          as: "userDetails",
-        },
-      },
-      {
-        $unwind: {
-          path: "$userDetails",
-          preserveNullAndEmptyArrays: true,
-        },
-      },
+      { $match: { isAvailable: true, approvalStatus: "approved" } },
+      ...userLookup(),
     ])
-    .sort(sortQuery)
+    .sort({ createdAt: -1 })
+    .limit(6)
     .toArray();
   res.json(resData);
 }
 
-async function store(req, res) {
+async function listTechnician(req, res) {
+  const userId = req.user.id;
+
+  const resData = await db.services
+    .aggregate([{ $match: { userId: new ObjectId(userId) } }, ...userLookup()])
+    .sort({ createdAt: -1 })
+    .toArray();
+  res.json(resData);
+}
+
+async function create(req, res) {
   const reqBody = req.body;
   const userData = req.user;
   const service = {
     ...reqBody,
     slug: slugify(req.body.title),
     userId: new ObjectId(userData.id),
-    status: "active",
-    approval: "pending",
+    isAvailable: true,
+    approvalStatus: "pending",
     createdAt: new Date(),
     updatedAt: new Date(),
   };
@@ -133,26 +78,10 @@ async function store(req, res) {
   res.json(resData);
 }
 
-async function show(req, res) {
+async function get(req, res) {
   const sId = req.params.sId;
   const resData = await db.services
-    .aggregate([
-      { $match: { _id: new ObjectId(sId) } },
-      {
-        $lookup: {
-          from: "user",
-          localField: "userId",
-          foreignField: "_id",
-          as: "userDetails",
-        },
-      },
-      {
-        $unwind: {
-          path: "$userDetails",
-          preserveNullAndEmptyArrays: true,
-        },
-      },
-    ])
+    .aggregate([{ $match: { _id: new ObjectId(sId) } }, ...userLookup()])
     .toArray();
   res.json(resData[0]);
 }
@@ -160,12 +89,23 @@ async function show(req, res) {
 async function update(req, res) {
   const sId = req.params.sId;
   const reqBody = req.body;
+
   if (req.user.role !== "admin") {
-    reqBody.approval = "pending";
+    reqBody.approvalStatus = "pending";
   }
+
   const resData = await db.services.updateOne(
     { _id: new ObjectId(sId) },
     { $set: reqBody },
+  );
+  res.json(resData);
+}
+
+async function updateAvailability(req, res) {
+  const sId = req.params.sId;
+  const resData = await db.services.updateOne(
+    { _id: new ObjectId(sId) },
+    { $set: { isAvailable: req.body.isAvailable } },
   );
   res.json(resData);
 }
@@ -176,38 +116,13 @@ async function destroy(req, res) {
   res.json(resData);
 }
 
-async function status(req, res) {
-  const sId = req.params.sId;
-  const resData = await db.services.updateOne(
-    { _id: new ObjectId(sId) },
-    { $set: { status: req.body.status } },
-  );
-  res.json(resData);
-}
-
-async function seed(req, res) {
-  const dropServices = await db.services.drop();
-
-  const technicians = await db.user.find({ role: "technician" }).toArray();
-  const services = servicesDemo.map((item) => {
-    const user = technicians[Math.floor(Math.random() * technicians.length)];
-    return {
-      ...item,
-      userId: new ObjectId(user._id),
-    };
-  });
-
-  const resData = await db.services.insertMany(services);
-  res.json(resData);
-}
-
 export default {
-  index,
-  store,
-  show,
+  list,
+  listFeatured,
+  listTechnician,
+  create,
+  get,
   update,
   destroy,
-  status,
-  seed,
-  indexAdmin,
+  updateAvailability,
 };

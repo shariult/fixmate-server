@@ -31,4 +31,6 @@ router
     AsyncError(indexController.getMyRequests),
   );
 
+router.route("/seed").get(AsyncError(indexController.seed));
+
 export default router;
