@@ -10,4 +10,6 @@ router
   .get(verifyToken, AsyncError(paymentController.index))
   .post(verifyToken, AsyncError(paymentController.store));
 
+router.route("/user").get(verifyToken, AsyncError(paymentController.indexUser));
+
 export default router;

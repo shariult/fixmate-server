@@ -12,6 +12,10 @@ router
   .get(verifyToken, AsyncError(bookingController.userPayments));
 
 router
+  .route("/admin")
+  .get(verifyToken, AsyncError(bookingController.indexAdmin));
+
+router
   .route("/:bId")
   .get(verifyToken, AsyncError(bookingController.show))
   .put(verifyToken, AsyncError(bookingController.update));

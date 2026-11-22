@@ -168,4 +168,69 @@ async function userPayments(req, res) {
   res.json(resData);
 }
 
-export default { store, show, update, cancel, status, userPayments };
+async function indexAdmin(req, res) {
+  const filter = req.query.filter;
+
+  const dbQuery = {};
+
+  const resData = await db.bookings
+    .aggregate([
+      { $match: dbQuery },
+      { $sort: { createdAt: -1 } },
+      {
+        $lookup: {
+          from: "services",
+          localField: "serviceId",
+          foreignField: "_id",
+          as: "serviceDetails",
+        },
+      },
+      {
+        $unwind: {
+          path: "$serviceDetails",
+          preserveNullAndEmptyArrays: true,
+        },
+      },
+      {
+        $lookup: {
+          from: "user",
+          localField: "technicianId",
+          foreignField: "_id",
+          as: "technicianDetails",
+        },
+      },
+      {
+        $unwind: {
+          path: "$technicianDetails",
+          preserveNullAndEmptyArrays: true,
+        },
+      },
+      {
+        $lookup: {
+          from: "user",
+          localField: "customerId",
+          foreignField: "_id",
+          as: "customerDetails",
+        },
+      },
+      {
+        $unwind: {
+          path: "$customerDetails",
+          preserveNullAndEmptyArrays: true,
+        },
+      },
+    ])
+    .toArray();
+
+  res.json(resData);
+}
+
+export default {
+  indexAdmin,
+  store,
+  show,
+  update,
+  cancel,
+  status,
+  userPayments,
+};
