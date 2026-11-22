@@ -11,4 +11,8 @@ router
   .route("/:bId/cancel")
   .get(verifyToken, AsyncError(bookingController.cancel));
 
+router
+  .route("/:bId/status")
+  .put(verifyToken, AsyncError(bookingController.status));
+
 export default router;

@@ -15,4 +15,8 @@ router
   .route("/my-bookings")
   .get(verifyToken, AsyncError(indexController.getMyBookings));
 
+router
+  .route("/my-requests")
+  .get(verifyToken, AsyncError(indexController.getMyRequests));
+
 export default router;

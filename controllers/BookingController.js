@@ -33,4 +33,14 @@ async function cancel(req, res) {
   res.json(resData);
 }
 
-export default { store, cancel };
+async function status(req, res) {
+  const bId = req.params.bId;
+  const reqBody = req.body;
+  const resData = await db.bookings.updateOne(
+    { _id: new ObjectId(bId) },
+    { $set: reqBody },
+  );
+  res.json(resData);
+}
+
+export default { store, cancel, status };
