@@ -24,4 +24,25 @@ async function verifyToken(req, res, next) {
   }
 }
 
-export { verifyToken };
+async function verifyAdmin(req, res, next) {
+  if (req.user.role !== "admin") {
+    return res.status(401).json({ message: "You are not an Admin!" });
+  }
+  next();
+}
+
+async function verifyTechnician(req, res, next) {
+  if (req.user.role !== "technician") {
+    return res.status(401).json({ message: "You are not a technician!" });
+  }
+  next();
+}
+
+async function verifyCustomer(req, res, next) {
+  if (req.user.role !== "customer") {
+    return res.status(401).json({ message: "You are not a customer!" });
+  }
+  next();
+}
+
+export { verifyToken, verifyAdmin, verifyTechnician, verifyCustomer };

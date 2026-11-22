@@ -1,11 +1,18 @@
 import express from "express";
 const router = express.Router();
-import { verifyToken } from "../middlewares/authValidate.js";
+import {
+  verifyAdmin,
+  verifyCustomer,
+  verifyTechnician,
+  verifyToken,
+} from "../middlewares/authValidate.js";
 import { AsyncError } from "../utils/errorHandler.js";
 
 import bookingController from "../controllers/BookingController.js";
 
-router.route("/").post(verifyToken, AsyncError(bookingController.store));
+router
+  .route("/")
+  .post(verifyToken, verifyCustomer, AsyncError(bookingController.store));
 
 router
   .route("/payments")
@@ -13,7 +20,7 @@ router
 
 router
   .route("/admin")
-  .get(verifyToken, AsyncError(bookingController.indexAdmin));
+  .get(verifyToken, verifyAdmin, AsyncError(bookingController.indexAdmin));
 
 router
   .route("/:bId")
@@ -22,10 +29,10 @@ router
 
 router
   .route("/:bId/cancel")
-  .get(verifyToken, AsyncError(bookingController.cancel));
+  .get(verifyToken, verifyCustomer, AsyncError(bookingController.cancel));
 
 router
   .route("/:bId/status")
-  .put(verifyToken, AsyncError(bookingController.status));
+  .put(verifyToken, verifyTechnician, AsyncError(bookingController.status));
 
 export default router;
