@@ -106,4 +106,66 @@ async function status(req, res) {
   res.json(resData);
 }
 
-export default { store, show, update, cancel, status };
+async function userPayments(req, res) {
+  const userId = new ObjectId(req.user.id);
+  const filter = req.query.filter;
+
+  const dbQuery = { customerId: userId };
+
+  if (filter === "paid") {
+    dbQuery.paymentId = { $exists: true, $nin: ["", null] };
+  }
+
+  const resData = await db.bookings
+    .aggregate([
+      { $match: dbQuery },
+      { $sort: { createdAt: -1 } },
+      {
+        $lookup: {
+          from: "services",
+          localField: "serviceId",
+          foreignField: "_id",
+          as: "serviceDetails",
+        },
+      },
+      {
+        $unwind: {
+          path: "$serviceDetails",
+          preserveNullAndEmptyArrays: true,
+        },
+      },
+      {
+        $lookup: {
+          from: "user",
+          localField: "technicianId",
+          foreignField: "_id",
+          as: "technicianDetails",
+        },
+      },
+      {
+        $unwind: {
+          path: "$technicianDetails",
+          preserveNullAndEmptyArrays: true,
+        },
+      },
+      {
+        $lookup: {
+          from: "user",
+          localField: "customerId",
+          foreignField: "_id",
+          as: "customerDetails",
+        },
+      },
+      {
+        $unwind: {
+          path: "$customerDetails",
+          preserveNullAndEmptyArrays: true,
+        },
+      },
+    ])
+    .toArray();
+
+  res.json(resData);
+}
+
+export default { store, show, update, cancel, status, userPayments };

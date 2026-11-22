@@ -8,6 +8,10 @@ import bookingController from "../controllers/BookingController.js";
 router.route("/").post(verifyToken, AsyncError(bookingController.store));
 
 router
+  .route("/payments")
+  .get(verifyToken, AsyncError(bookingController.userPayments));
+
+router
   .route("/:bId")
   .get(verifyToken, AsyncError(bookingController.show))
   .put(verifyToken, AsyncError(bookingController.update));
