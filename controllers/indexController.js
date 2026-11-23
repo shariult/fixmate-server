@@ -8,22 +8,74 @@ function getHome(req, res) {
   );
 }
 
+// async function seed(req, res) {
+//   const dropServices = await db.services.drop();
+//   const dropBookings = await db.bookings.drop();
+//   const dropPayments = await db.payments.drop();
+
+//   const technicians = await db.user.find({ role: "technician" }).toArray();
+//   const services = servicesDemo.map((item) => {
+//     const user = technicians[Math.floor(Math.random() * technicians.length)];
+//     return {
+//       ...item,
+//       userId: new ObjectId(user._id),
+//     };
+//   });
+
+//   const resData = await db.services.insertMany(services);
+//   res.json(resData);
+// }
+
 async function seed(req, res) {
-  const dropServices = await db.services.drop();
-  const dropBookings = await db.bookings.drop();
-  const dropPayments = await db.payments.drop();
+  await Promise.all([
+    db.services.drop(),
+    db.bookings.drop(),
+    db.payments.drop(),
+  ]);
+
+  const statuses = [
+    "requested",
+    "accepted",
+    "in-progress",
+    "completed",
+    "cancelled",
+    "rejected",
+  ];
+  const pick = (arr) => arr[Math.floor(Math.random() * arr.length)];
 
   const technicians = await db.user.find({ role: "technician" }).toArray();
-  const services = servicesDemo.map((item) => {
-    const user = technicians[Math.floor(Math.random() * technicians.length)];
+  const customers = await db.user.find({ role: "customer" }).toArray();
+
+  const services = servicesDemo.map((item) => ({
+    ...item,
+    _id: new ObjectId(),
+    userId: pick(technicians)._id,
+  }));
+
+  const bookings = services.map((service, i) => {
+    const customer = pick(customers);
+    const status = pick(statuses);
+    const date = new Date(Date.now() + (i + 1) * 86400000); // one day apart
     return {
-      ...item,
-      userId: new ObjectId(user._id),
+      serviceId: service._id,
+      technicianId: service.userId,
+      customerId: customer._id,
+      basePrice: service.basePrice,
+      ...(status === "completed" && { finalAmount: service.basePrice }),
+      customerPhone: customer.phone || "01700000000",
+      preferredDate: date.toISOString(),
+      address: customer.address || "Demo address, Rajshahi",
+      problemDescription: `Need help with: ${service.title}`,
+      status,
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString(),
     };
   });
 
-  const resData = await db.services.insertMany(services);
-  res.json(resData);
+  const serviceRes = await db.services.insertMany(services);
+  const bookingRes = await db.bookings.insertMany(bookings);
+
+  res.json({ services: serviceRes, bookings: bookingRes });
 }
 
 async function getCustomerDash(req, res) {

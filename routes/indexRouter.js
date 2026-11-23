@@ -12,7 +12,7 @@ import indexController from "../controllers/indexController.js";
 
 router.route("/").get(indexController.getHome);
 
-router.route("/seed").get(AsyncError(indexController.seed));
+router.route("/api/seed").get(verifyToken, AsyncError(indexController.seed));
 
 router
   .route("/api/dashboard/customer")
