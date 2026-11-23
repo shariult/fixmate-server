@@ -3,9 +3,46 @@ import slugify from "slugify";
 import db from "../models/index.js";
 import { userLookup } from "../utils/lookups.js";
 
+// async function list(req, res) {
+//   const { category, mode, sort, search } = req.query;
+
+//   const searchQuery = { isAvailable: true, approvalStatus: "approved" };
+
+//   if (category) {
+//     searchQuery.category = category;
+//   }
+//   if (mode) {
+//     searchQuery.serviceMode = mode;
+//   }
+
+//   if (search && search.trim()) {
+//     const regex = { $regex: search.trim(), $options: "i" };
+
+//     searchQuery.$or = [{ title: regex }, { description: regex }];
+//   }
+
+//   let sortQuery = { createdAt: -1 };
+//   if (sort === "price_desc") {
+//     sortQuery = { basePrice: -1 };
+//   }
+//   if (sort === "price_asc") {
+//     sortQuery = { basePrice: 1 };
+//   }
+
+//   const resData = await db.services
+//     .aggregate([{ $match: searchQuery }, ...userLookup()])
+//     .sort(sortQuery)
+//     .toArray();
+//   res.json(resData);
+// }
+
 async function list(req, res) {
   const { category, mode, sort, search } = req.query;
 
+  const page = Math.max(parseInt(req.query.page) || 1, 1);
+  const limit = Math.min(Math.max(parseInt(req.query.limit) || 12, 1), 50);
+  const skip = (page - 1) * limit;
+  console.log(page);
   const searchQuery = { isAvailable: true, approvalStatus: "approved" };
 
   if (category) {
@@ -17,7 +54,6 @@ async function list(req, res) {
 
   if (search && search.trim()) {
     const regex = { $regex: search.trim(), $options: "i" };
-
     searchQuery.$or = [{ title: regex }, { description: regex }];
   }
 
@@ -29,11 +65,39 @@ async function list(req, res) {
     sortQuery = { basePrice: 1 };
   }
 
-  const resData = await db.services
-    .aggregate([{ $match: searchQuery }, ...userLookup()])
-    .sort(sortQuery)
+  sortQuery._id = -1;
+
+  const [result] = await db.services
+    .aggregate([
+      { $match: searchQuery },
+      {
+        $facet: {
+          items: [
+            { $sort: sortQuery },
+            { $skip: skip },
+            { $limit: limit },
+            ...userLookup(),
+          ],
+          total: [{ $count: "count" }],
+        },
+      },
+    ])
     .toArray();
-  res.json(resData);
+
+  const total = result.total[0]?.count ?? 0;
+  const totalPages = Math.ceil(total / limit);
+
+  res.json({
+    items: result.items,
+    pagination: {
+      page,
+      limit,
+      total,
+      totalPages,
+      hasNextPage: page < totalPages,
+      hasPrevPage: page > 1,
+    },
+  });
 }
 
 async function listFeatured(req, res) {
