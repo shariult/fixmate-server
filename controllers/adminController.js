@@ -69,7 +69,6 @@ async function updateUserRole(req, res) {
 async function updateServiceApproval(req, res) {
   const sId = req.params.sId;
   const approvalStatus = req.body.approvalStatus;
-  console.log(req.body);
   const resData = await db.services.updateOne(
     { _id: new ObjectId(sId) },
     { $set: { approvalStatus } },
