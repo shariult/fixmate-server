@@ -30,6 +30,10 @@ async function listPayments(req, res) {
 async function listServices(req, res) {
   const searchQuery = {};
 
+  if (req.query.status) {
+    searchQuery.approvalStatus = req.query.status;
+  }
+
   const resData = await db.services
     .aggregate([{ $match: searchQuery }, ...userLookup()])
     .sort({ createdAt: -1 })
