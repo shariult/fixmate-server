@@ -42,9 +42,13 @@ async function listServices(req, res) {
 }
 
 async function listBookings(req, res) {
-  const filter = req.query.filter;
+  const status = req.query.status;
 
   const dbQuery = {};
+
+  if (status) {
+    dbQuery.status = status;
+  }
 
   const resData = await db.bookings
     .aggregate([
