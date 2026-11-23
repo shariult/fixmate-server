@@ -37,7 +37,7 @@ async function create(req, res) {
     customerId: new ObjectId(customerData.id),
     technicianId: new ObjectId(service.userId),
     status: "requested",
-    paymentId: "",
+    paymentStatus: "unpaid",
     createdAt: new Date(),
     updatedAt: new Date(),
   };
@@ -92,7 +92,7 @@ async function updateStatus(req, res) {
   const reqBody = req.body;
   const resData = await db.bookings.updateOne(
     { _id: new ObjectId(bId) },
-    { $set: { status: reqBody.status } },
+    { $set: reqBody },
   );
   res.json(resData);
 }

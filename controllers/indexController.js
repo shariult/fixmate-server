@@ -37,7 +37,7 @@ async function seed(req, res) {
     "requested",
     "accepted",
     "in-progress",
-    "completed",
+    // "completed",
     "cancelled",
     "rejected",
   ];
@@ -69,6 +69,7 @@ async function seed(req, res) {
       status,
       createdAt: new Date().toISOString(),
       updatedAt: new Date().toISOString(),
+      paymentStatus: status !== "completed" ? "unpaid" : "paid",
     };
   });
 
