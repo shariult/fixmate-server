@@ -5,14 +5,31 @@ import {
   serviceLookup,
   technicianLookup,
 } from "../utils/lookups.js";
+import { ExpressError } from "../utils/errorHandler.js";
 
 async function create(req, res) {
   const reqBody = req.body;
+  if (!reqBody.serviceId) {
+    throw new ExpressError("Invalid data provided!");
+  }
 
   const service = await db.services.findOne({
     _id: new ObjectId(reqBody.serviceId),
   });
   const customerData = req.user;
+  if (!service || !customerData) {
+    throw new ExpressError("Invalid data provided!");
+  }
+
+  // check for duplicate request
+  const prevBooking = await db.bookings.findOne({
+    customerId: new ObjectId(req.user.id),
+    serviceId: new ObjectId(service._id),
+    preferredDate: reqBody.preferredDate,
+  });
+  if (prevBooking) {
+    throw new ExpressError("You have already a booking on this day!");
+  }
 
   const booking = {
     ...reqBody,
