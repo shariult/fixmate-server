@@ -70,12 +70,19 @@ async function cancel(req, res) {
 
 async function listTechnician(req, res) {
   const userData = req.user;
+  const searchQ = req.query.status;
+
+  const statusFilter = { $ne: "cancelled" };
+  if (searchQ) {
+    statusFilter.$in = [searchQ];
+  }
+
   const resData = await db.bookings
     .aggregate([
       {
         $match: {
           technicianId: new ObjectId(userData.id),
-          status: { $ne: "cancelled" },
+          status: statusFilter,
         },
       },
       ...serviceLookup(),
