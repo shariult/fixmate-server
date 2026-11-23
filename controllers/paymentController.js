@@ -1,59 +1,12 @@
 import { ObjectId } from "mongodb";
 import db from "../models/index.js";
+import {
+  customerLookup,
+  serviceLookup,
+  technicianLookup,
+} from "../utils/lookups.js";
 
-async function index(req, res) {
-  const resData = await db.payments
-    .aggregate([
-      { $match: {} },
-      {
-        $lookup: {
-          from: "services",
-          localField: "serviceId",
-          foreignField: "_id",
-          as: "serviceDetails",
-        },
-      },
-      {
-        $unwind: {
-          path: "$serviceDetails",
-          preserveNullAndEmptyArrays: true,
-        },
-      },
-      {
-        $lookup: {
-          from: "user",
-          localField: "technicianId",
-          foreignField: "_id",
-          as: "technicianDetails",
-        },
-      },
-      {
-        $unwind: {
-          path: "$technicianDetails",
-          preserveNullAndEmptyArrays: true,
-        },
-      },
-      {
-        $lookup: {
-          from: "user",
-          localField: "customerId",
-          foreignField: "_id",
-          as: "customerDetails",
-        },
-      },
-      {
-        $unwind: {
-          path: "$customerDetails",
-          preserveNullAndEmptyArrays: true,
-        },
-      },
-    ])
-    .toArray();
-
-  res.json(resData);
-}
-
-async function store(req, res) {
+async function create(req, res) {
   const reqBody = req.body;
   reqBody.bookingId = new ObjectId(reqBody.bookingId);
   reqBody.customerId = new ObjectId(reqBody.customerId);
@@ -63,57 +16,18 @@ async function store(req, res) {
   res.json(resData);
 }
 
-async function indexUser(req, res) {
+async function listUserPayments(req, res) {
   const userId = req.user.id;
   const resData = await db.payments
     .aggregate([
       { $match: { customerId: new ObjectId(userId) } },
-      {
-        $lookup: {
-          from: "services",
-          localField: "serviceId",
-          foreignField: "_id",
-          as: "serviceDetails",
-        },
-      },
-      {
-        $unwind: {
-          path: "$serviceDetails",
-          preserveNullAndEmptyArrays: true,
-        },
-      },
-      {
-        $lookup: {
-          from: "user",
-          localField: "technicianId",
-          foreignField: "_id",
-          as: "technicianDetails",
-        },
-      },
-      {
-        $unwind: {
-          path: "$technicianDetails",
-          preserveNullAndEmptyArrays: true,
-        },
-      },
-      {
-        $lookup: {
-          from: "user",
-          localField: "customerId",
-          foreignField: "_id",
-          as: "customerDetails",
-        },
-      },
-      {
-        $unwind: {
-          path: "$customerDetails",
-          preserveNullAndEmptyArrays: true,
-        },
-      },
+      ...serviceLookup(),
+      ...technicianLookup(),
+      ...customerLookup(),
     ])
     .toArray();
 
   res.json(resData);
 }
 
-export default { index, store, indexUser };
+export default { create, listUserPayments };

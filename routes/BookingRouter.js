@@ -12,27 +12,35 @@ import bookingController from "../controllers/BookingController.js";
 
 router
   .route("/")
-  .post(verifyToken, verifyCustomer, AsyncError(bookingController.store));
+  .post(verifyToken, verifyCustomer, AsyncError(bookingController.create));
 
 router
-  .route("/payments")
-  .get(verifyToken, AsyncError(bookingController.userPayments));
+  .route("/my")
+  .get(verifyToken, verifyCustomer, AsyncError(bookingController.listCustomer));
 
 router
-  .route("/admin")
-  .get(verifyToken, verifyAdmin, AsyncError(bookingController.indexAdmin));
-
-router
-  .route("/:bId")
-  .get(verifyToken, AsyncError(bookingController.show))
-  .put(verifyToken, AsyncError(bookingController.update));
+  .route("/technician")
+  .get(
+    verifyToken,
+    verifyTechnician,
+    AsyncError(bookingController.listTechnician),
+  );
 
 router
   .route("/:bId/cancel")
-  .get(verifyToken, verifyCustomer, AsyncError(bookingController.cancel));
+  .put(verifyToken, verifyCustomer, AsyncError(bookingController.cancel));
 
 router
   .route("/:bId/status")
-  .put(verifyToken, verifyTechnician, AsyncError(bookingController.status));
+  .put(
+    verifyToken,
+    verifyTechnician,
+    AsyncError(bookingController.updateStatus),
+  );
+
+router
+  .route("/:bId")
+  .get(verifyToken, AsyncError(bookingController.get))
+  .put(verifyToken, AsyncError(bookingController.update));
 
 export default router;

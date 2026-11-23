@@ -6,17 +6,6 @@ async function index(req, res) {
   res.json(resData);
 }
 
-async function updateUserRole(req, res) {
-  const userId = req.params.uId;
-  const reqBody = req.body;
-
-  const resData = await db.user.updateOne(
-    { _id: new ObjectId(userId) },
-    { $set: reqBody },
-  );
-  res.json(resData);
-}
-
 async function updateNewUser(req, res) {
   const userData = req.user;
   const userId = userData.id;
@@ -33,4 +22,4 @@ async function updateNewUser(req, res) {
   res.json(resData);
 }
 
-export default { index, updateUserRole, updateNewUser };
+export default { index, updateNewUser };

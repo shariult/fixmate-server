@@ -1,8 +1,12 @@
 import { ObjectId } from "mongodb";
-import slugify from "slugify";
 import db from "../models/index.js";
+import {
+  customerLookup,
+  serviceLookup,
+  technicianLookup,
+} from "../utils/lookups.js";
 
-async function store(req, res) {
+async function create(req, res) {
   const reqBody = req.body;
 
   const service = await db.services.findOne({
@@ -24,53 +28,66 @@ async function store(req, res) {
   res.json(resData);
 }
 
-async function show(req, res) {
+async function listCustomer(req, res) {
+  const userData = req.user;
+  const resData = await db.bookings
+    .aggregate([
+      { $match: { customerId: new ObjectId(userData.id) } },
+      ...customerLookup(),
+      ...technicianLookup(),
+      ...serviceLookup(),
+    ])
+    .toArray();
+  res.json(resData);
+}
+
+async function cancel(req, res) {
+  const bId = req.params.bId;
+  const userId = req.user.id;
+  const resData = await db.bookings.updateOne(
+    { _id: new ObjectId(bId), customerId: new ObjectId(userId) },
+    { $set: { status: "cancelled" } },
+  );
+  res.json(resData);
+}
+
+async function listTechnician(req, res) {
+  const userData = req.user;
+  const resData = await db.bookings
+    .aggregate([
+      {
+        $match: {
+          technicianId: new ObjectId(userData.id),
+          status: { $ne: "cancelled" },
+        },
+      },
+      ...serviceLookup(),
+      ...customerLookup(),
+      ...technicianLookup(),
+    ])
+    .toArray();
+
+  res.json(resData);
+}
+
+async function updateStatus(req, res) {
+  const bId = req.params.bId;
+  const reqBody = req.body;
+  const resData = await db.bookings.updateOne(
+    { _id: new ObjectId(bId) },
+    { $set: { status: reqBody.status } },
+  );
+  res.json(resData);
+}
+
+async function get(req, res) {
   const bId = req.params.bId;
   const resData = await db.bookings
     .aggregate([
       { $match: { _id: new ObjectId(bId) } },
-      {
-        $lookup: {
-          from: "services",
-          localField: "serviceId",
-          foreignField: "_id",
-          as: "serviceDetails",
-        },
-      },
-      {
-        $unwind: {
-          path: "$serviceDetails",
-          preserveNullAndEmptyArrays: true,
-        },
-      },
-      {
-        $lookup: {
-          from: "user",
-          localField: "technicianId",
-          foreignField: "_id",
-          as: "technicianDetails",
-        },
-      },
-      {
-        $unwind: {
-          path: "$technicianDetails",
-          preserveNullAndEmptyArrays: true,
-        },
-      },
-      {
-        $lookup: {
-          from: "user",
-          localField: "customerId",
-          foreignField: "_id",
-          as: "customerDetails",
-        },
-      },
-      {
-        $unwind: {
-          path: "$customerDetails",
-          preserveNullAndEmptyArrays: true,
-        },
-      },
+      ...serviceLookup(),
+      ...technicianLookup(),
+      ...customerLookup(),
     ])
     .toArray();
   res.json(resData[0]);
@@ -87,150 +104,12 @@ async function update(req, res) {
   res.json(resData);
 }
 
-async function cancel(req, res) {
-  const bId = req.params.bId;
-  const resData = await db.bookings.updateOne(
-    { _id: new ObjectId(bId) },
-    { $set: { status: "cancelled" } },
-  );
-  res.json(resData);
-}
-
-async function status(req, res) {
-  const bId = req.params.bId;
-  const reqBody = req.body;
-  const resData = await db.bookings.updateOne(
-    { _id: new ObjectId(bId) },
-    { $set: reqBody },
-  );
-  res.json(resData);
-}
-
-async function userPayments(req, res) {
-  const userId = new ObjectId(req.user.id);
-  const filter = req.query.filter;
-
-  const dbQuery = { customerId: userId };
-
-  if (filter === "paid") {
-    dbQuery.paymentId = { $exists: true, $nin: ["", null] };
-  }
-
-  const resData = await db.bookings
-    .aggregate([
-      { $match: dbQuery },
-      { $sort: { createdAt: -1 } },
-      {
-        $lookup: {
-          from: "services",
-          localField: "serviceId",
-          foreignField: "_id",
-          as: "serviceDetails",
-        },
-      },
-      {
-        $unwind: {
-          path: "$serviceDetails",
-          preserveNullAndEmptyArrays: true,
-        },
-      },
-      {
-        $lookup: {
-          from: "user",
-          localField: "technicianId",
-          foreignField: "_id",
-          as: "technicianDetails",
-        },
-      },
-      {
-        $unwind: {
-          path: "$technicianDetails",
-          preserveNullAndEmptyArrays: true,
-        },
-      },
-      {
-        $lookup: {
-          from: "user",
-          localField: "customerId",
-          foreignField: "_id",
-          as: "customerDetails",
-        },
-      },
-      {
-        $unwind: {
-          path: "$customerDetails",
-          preserveNullAndEmptyArrays: true,
-        },
-      },
-    ])
-    .toArray();
-
-  res.json(resData);
-}
-
-async function indexAdmin(req, res) {
-  const filter = req.query.filter;
-
-  const dbQuery = {};
-
-  const resData = await db.bookings
-    .aggregate([
-      { $match: dbQuery },
-      { $sort: { createdAt: -1 } },
-      {
-        $lookup: {
-          from: "services",
-          localField: "serviceId",
-          foreignField: "_id",
-          as: "serviceDetails",
-        },
-      },
-      {
-        $unwind: {
-          path: "$serviceDetails",
-          preserveNullAndEmptyArrays: true,
-        },
-      },
-      {
-        $lookup: {
-          from: "user",
-          localField: "technicianId",
-          foreignField: "_id",
-          as: "technicianDetails",
-        },
-      },
-      {
-        $unwind: {
-          path: "$technicianDetails",
-          preserveNullAndEmptyArrays: true,
-        },
-      },
-      {
-        $lookup: {
-          from: "user",
-          localField: "customerId",
-          foreignField: "_id",
-          as: "customerDetails",
-        },
-      },
-      {
-        $unwind: {
-          path: "$customerDetails",
-          preserveNullAndEmptyArrays: true,
-        },
-      },
-    ])
-    .toArray();
-
-  res.json(resData);
-}
-
 export default {
-  indexAdmin,
-  store,
-  show,
-  update,
+  create,
+  listCustomer,
   cancel,
-  status,
-  userPayments,
+  listTechnician,
+  updateStatus,
+  get,
+  update,
 };

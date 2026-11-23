@@ -17,6 +17,7 @@ app.use(cors());
 //=== custom imports ===//
 import { ExpressError } from "./utils/errorHandler.js";
 import indexRoutes from "./routes/indexRouter.js";
+import adminRoutes from "./routes/adminRouter.js";
 import serviceRoutes from "./routes/serviceRouter.js";
 import bookingRoutes from "./routes/BookingRouter.js";
 import userRoutes from "./routes/userRouter.js";
@@ -25,6 +26,7 @@ import paymentRoutes from "./routes/paymentRouter.js";
 //=== routes ===//
 
 app.use("/", indexRoutes);
+app.use("/api/admin", adminRoutes);
 app.use("/api/services", serviceRoutes);
 app.use("/api/bookings", bookingRoutes);
 app.use("/api/payments", paymentRoutes);

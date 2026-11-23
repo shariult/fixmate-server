@@ -16,13 +16,9 @@ async function list(req, res) {
   }
 
   if (search && search.trim()) {
-    const regex = { $regex: escapeRegex(search.trim()), $options: "i" };
+    const regex = { $regex: search.trim(), $options: "i" };
 
-    searchQuery.$or = [
-      { title: regex },
-      { description: regex },
-      { category: regex },
-    ];
+    searchQuery.$or = [{ title: regex }, { description: regex }];
   }
 
   let sortQuery = { createdAt: -1 };

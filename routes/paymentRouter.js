@@ -1,15 +1,24 @@
 import express from "express";
 const router = express.Router();
-import { verifyAdmin, verifyToken } from "../middlewares/authValidate.js";
+import {
+  verifyAdmin,
+  verifyCustomer,
+  verifyToken,
+} from "../middlewares/authValidate.js";
 import { AsyncError } from "../utils/errorHandler.js";
 
 import paymentController from "../controllers/paymentController.js";
 
 router
   .route("/")
-  .get(verifyToken, verifyAdmin, AsyncError(paymentController.index))
-  .post(verifyToken, AsyncError(paymentController.store));
+  .post(verifyToken, verifyCustomer, AsyncError(paymentController.create));
 
-router.route("/user").get(verifyToken, AsyncError(paymentController.indexUser));
+router
+  .route("/customer")
+  .get(
+    verifyToken,
+    verifyCustomer,
+    AsyncError(paymentController.listUserPayments),
+  );
 
 export default router;
