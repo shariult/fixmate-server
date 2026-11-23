@@ -42,7 +42,6 @@ async function list(req, res) {
   const page = Math.max(parseInt(req.query.page) || 1, 1);
   const limit = Math.min(Math.max(parseInt(req.query.limit) || 12, 1), 50);
   const skip = (page - 1) * limit;
-  console.log(page);
   const searchQuery = { isAvailable: true, approvalStatus: "approved" };
 
   if (category) {
@@ -67,7 +66,7 @@ async function list(req, res) {
 
   sortQuery._id = -1;
 
-  const [result] = await db.services
+  const [resData] = await db.services
     .aggregate([
       { $match: searchQuery },
       {
@@ -84,11 +83,11 @@ async function list(req, res) {
     ])
     .toArray();
 
-  const total = result.total[0]?.count ?? 0;
+  const total = resData.total[0]?.count ?? 0;
   const totalPages = Math.ceil(total / limit);
 
   res.json({
-    items: result.items,
+    items: resData.items,
     pagination: {
       page,
       limit,
